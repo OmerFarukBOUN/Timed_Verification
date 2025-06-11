@@ -6,6 +6,16 @@ open Rewriting
 
 let verifier_counter: int ref = ref 0;;
 
+let print_verifier_step (label: string) (expr: expression) (in_eff: effect) (out_eff: effect) =
+  print_endline ("\n--- [Forward Step: " ^ label ^ "] ---");
+  print_endline ("[Expression] " ^ printExpr expr);
+  print_endline ("[Input Effect] " ^ showEffect in_eff);
+  print_endline ("[Output Effect] " ^ showEffect out_eff);
+  print_endline "-----------------------------------";
+  flush stdout
+;;
+
+
 
 let verifier_initialise () = 
   let _ = verifier_counter :=  0 in 
@@ -177,8 +187,12 @@ let rec verifier (caller:string) (list_parm:param) (expr:expression) (preconditi
 
   | EventRaise (ev, p, ops) -> List.map (fun (pi, es) -> (pi, Cons (es, Event (Present (ev, p, ops) )))) current
   | Seq (e1, e2) -> 
-    let eff1 = verifier caller list_parm e1 precondition current prog in 
-    verifier caller list_parm e2 precondition eff1 prog
+  let eff1 = verifier caller list_parm e1 precondition current prog in 
+  print_verifier_step "Seq (e1)" e1 current eff1;
+  let eff2 = verifier caller list_parm e2 precondition eff1 prog in
+  print_verifier_step "Seq (e2)" e2 eff1 eff2;
+  eff2
+
 
   | IfElse (e1, e2, e3) -> 
     let condIf = condToPure e1 in 
@@ -198,7 +212,10 @@ let rec verifier (caller:string) (list_parm:param) (expr:expression) (preconditi
       let state_C_ELSE  = addConstrain current condElse in 
       List.append (verifier caller list_parm e2 precondition state_C_IF prog) (verifier caller list_parm e3 precondition state_C_ELSE prog)
 
-  | Assign a -> List.map ( fun (pi_c, es_c) -> (pi_c, Cons(es_c, Event (Present("TAO",None, [a])))) ) current
+  | Assign a ->
+    let out_eff = List.map ( fun (pi_c, es_c) -> (pi_c, Cons(es_c, Event (Present("TAO",None, [a])))) ) current in
+    print_verifier_step "Assign" expr current out_eff;
+    out_eff
   | Interrupt (e1, e2, t) -> 
     let rec interrupt_interleave (p, es) his: effect = 
       let fstSet = fst p es in 
@@ -335,9 +352,7 @@ let rec verifier (caller:string) (list_parm:param) (expr:expression) (preconditi
                 (*print_string ("[Precondition holds] when " ^caller ^" is calling " ^ mn ^"\n\n");*)
               let newState = ( (concatEffEff ( current) ( subPost))) in
               newState)
-            else 
-            
-            raise (Foo ("PreCondition does not hold when " ^ caller^" is calling: "^ name ^"!"))
+            else raise (Foo ("PreCondition does not hold when " ^ caller^" is calling: "^ name ^"!"))
             
       
       )

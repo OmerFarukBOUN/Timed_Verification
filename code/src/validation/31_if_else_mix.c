@@ -1,3 +1,5 @@
+// Fixed example
+
 #include "primitives.c"
 
 // Should Succeed 
@@ -27,7 +29,7 @@ ens: TRUE∧(X . Y .Z .W)
 }
 
 // Should Succeed 
-void if_else_test1 () 
+void main (int x) 
 /*
 req: TRUE∧(_^*)
 ens: (x=1 ∧ A . B . C . D) ∨ 

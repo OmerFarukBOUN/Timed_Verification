@@ -1,3 +1,5 @@
+// Fixed example
+
 #include "primitives.c"
 
 // Should Succeed 
@@ -40,7 +42,7 @@ ens: (t≤n)∧ (Cup # t).Done
 }
 
 // Should Succeed 
-void if_else_test2 () 
+void main (int x) 
 /*
 req: TRUE∧(_^*)
 ens:(x=1 ∧ A . B . C . D) ∨ (((~(x=1))∧x=2 ∧ X . Y . Z . W) ∨ ((~(x=1))∧(~(x=2))∧t≤100 ∧ (Cup#t) . Done))
